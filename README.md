@@ -1,7 +1,7 @@
 # Weyl Tester
 Command-line interface for performing the core WeylGovernance actions (opening/closing cycles, voting, withdrawing) in a testing environment.
 
-This library was designed to act as the "other user" in an election while testing the new mobile client.  It uses the first web3 account (`LOCAL_ACCT`) to perform actions on a default or configured client address (`MOBILE_ACCT`).  The `WeylGovV2` contract from eximchain-governance-mechanism` needs to already be deployed on Ganache for this tester to behave.
+This library was designed to act as the "other user" in an election while testing the new mobile client.  It uses the first web3 account (`LOCAL_ACCT`) to perform actions on a default or configured client address (`MOBILE_ACCT`).  One of the `WeylGovernance` contracts from [`eximchain-governance-mechanism`](https://github.com/Eximchain/eximchain-governance-mechanism/blob/master/contracts/WeylGovV2.sol) must already be deployed on Ganache for the tester to behave, and its deployment address must be provided in config.
 
 ## Installation
 This is a private package for Eximchain employees, so you must be given access to Eximchain's NPM organization before you can install.  Once you have access, installation is as easy as:
@@ -60,12 +60,12 @@ Commands:
 ## Default Values
 ```
 {
-    PROVIDER_URL : 'http://localhost:8545',
-    GAS_PRICE : '2000000',
-    GAS_LIMIT : '10000000',
-    WEYL_ADDR : '0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2',
-    BLOCKVOTE_ADDR: '0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a',
-    MOBILE_ACCT : '0x53fd44c705473ee2d780fe8f5278076f2171ca65'
+    "PROVIDER_URL" : "http://localhost:8545",
+    "GAS_PRICE" : "2000000",
+    "GAS_LIMIT" : "10000000",
+    "WEYL_ADDR" : "0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2",
+    "BLOCKVOTE_ADDR": "0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a",
+    "MOBILE_ACCT" : "0x53fd44c705473ee2d780fe8f5278076f2171ca65"
 }
 ```
 

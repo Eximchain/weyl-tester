@@ -1,3 +1,4 @@
+const fs = require('fs');
 var BigNum = require('bignumber.js');
 var range = require('lodash.range');
 var omitBy = require('lodash.omitby');
@@ -38,6 +39,15 @@ class WeylTester {
         gasPrice: this.GAS_PRICE,
         gas: this.GAS_LIMIT
     } };
+
+    resolveToName(addr) {
+        let lowAddr = addr.toLowerCase();
+        if (lowAddr == this.MOBILE_ACCT.toLowerCase()){
+            return 'MOBILE_ACCT';
+        } else if (lowAddr == this.LOCAL_ACCT.toLowerCase()){
+            return 'LOCAL_ACCT';
+        } else { return addr }
+    }
 
     async ensureLocalAcct(){
         if (!this.LOCAL_ACCT){
@@ -92,14 +102,36 @@ class WeylTester {
         console.table([strungCycleRecord]);
     
         const allNomineeBallots = [];
-        const numNominees = await this.governance.methods.nomineesInCycle().call();
-        for (var i of range(numNominees)){
-            let nomAddress = await this.governance.methods.nomineeBallotKeys(i).call();
-            let nomBallot = await this.governance.methods.nomineeBallots(nomAddress).call();
-            nomBallot['Nominee'] = nomAddress == this.MOBILE_ACCT ? 'MOBILE_ACCT' : nomAddress == this.LOCAL_ACCT ? 'LOCAL_ACCT' : nomAddress;
-            nomBallot = forceToString(nomBallot);
-            allNomineeBallots.push(nomBallot);
+        const getAllBallots = true;
+        if (getAllBallots){
+            let nomKey = 0;
+            let haveMoreNomineeBallots = true;
+            // Use a while+try loop because we don't know how many
+            // nominee ballots there are in the array, and querying
+            // one too far leads to an error.
+            while (haveMoreNomineeBallots){
+                try {
+                    let nomAddress = await this.governance.methods.nomineeBallotKeys(nomKey).call();
+                    let nomBallot = await this.governance.methods.nomineeBallots(nomAddress).call();
+                    nomBallot['Nominee'] = this.resolveToName(nomAddress);
+                    nomBallot = forceToString(nomBallot);
+                    allNomineeBallots.push(nomBallot);
+                    nomKey ++;
+                } catch (e) {
+                    haveMoreNomineeBallots = false;
+                }
+            }
+        } else {
+            const numNominees = await this.governance.methods.nomineesInCycle().call();
+            for (var i of range(numNominees)){
+                let nomAddress = await this.governance.methods.nomineeBallotKeys(i).call();
+                let nomBallot = await this.governance.methods.nomineeBallots(nomAddress).call();
+                nomBallot['Nominee'] = nomAddress == this.MOBILE_ACCT ? 'MOBILE_ACCT' : nomAddress == this.LOCAL_ACCT ? 'LOCAL_ACCT' : nomAddress;
+                nomBallot = forceToString(nomBallot);
+                allNomineeBallots.push(nomBallot);
+            }
         }
+
         if (allNomineeBallots.length > 0){
             console.log('\n  ==> NOMINEE BALLOTS\n')
             console.table(allNomineeBallots);
@@ -112,6 +144,8 @@ class WeylTester {
         for (var i of range(currentBallotId)){
             let ballot = await this.governance.methods.ballotRecords(i+1).call();
             ballot['Ballot ID'] = i+1;
+            ballot['voter'] = this.resolveToName(ballot['voter']);
+            ballot['voted_for'] = this.resolveToName(ballot['voted_for']);
             allBallots.push(forceToString(ballot));
         }
         if (allBallots.length > 0){
@@ -127,6 +161,7 @@ class WeylTester {
             let record = await this.governance.methods.withdrawRecords(i+1).call();
             record.withdrawalId = i+1;
             record.status = cycleStatuses[record.status];
+            record['beneficiary'] = this.resolveToName(record['beneficiary']);
             allWithdrawalRecords.push(forceToString(record))
         }
         if (allWithdrawalRecords.length > 0){

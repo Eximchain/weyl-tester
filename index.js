@@ -43,14 +43,14 @@ program
         console.log("");
         console.log("  > Default config:")
         console.log(`
-            {
-                PROVIDER_URL : 'http://localhost:8545',
-                GAS_PRICE : '2000000',
-                GAS_LIMIT : '10000000',
-                WEYL_ADDR : '0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2',
-                BLOCKVOTE_ADDR: '0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a',
-                MOBILE_ACCT : '0x53fd44c705473ee2d780fe8f5278076f2171ca65'
-            }
+        {
+            "PROVIDER_URL" : "http://localhost:8545",
+            "GAS_PRICE" : "2000000",
+            "GAS_LIMIT" : "10000000",
+            "WEYL_ADDR" : "0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2",
+            "BLOCKVOTE_ADDR": "0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a",
+            "MOBILE_ACCT" : "0x53fd44c705473ee2d780fe8f5278076f2171ca65"
+        }
         `)
         console.log("  > Default MOBILE_ACCT:")
         console.log("")
@@ -62,72 +62,73 @@ program
 program
     .command('inspect')
     .description('Print a summary of the current state of the governance contract.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        let harness = new WeylTester(program.config);
         await harness.inspect();
     });
 
 program
     .command('balances')
     .description('Check the balance stored at both ACCTs and the WeylGovernance contract.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        let harness = new WeylTester(program.config);
         await harness.balances();
     });
 
 program
     .command('fund')
     .description('Send 10K ETH from LOCAL_ACCT to MOBILE_ACCT.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        let harness = new WeylTester(program.config);
         await harness.fund();
     });
 
 program
     .command('init')
     .description('Ensures both LOCAL_ACCT & MOBILE_ACCT are allowed to govern.  Call after fresh contract deploy.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        console.log('program.config : ',program.config);
+        let harness = new WeylTester(program.config);
         await harness.init();
     });
 
 program
     .command('open')
     .description('Open a new governance cycle.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        let harness = new WeylTester(program.config);
         await harness.open();
     });
 
 program
     .command('close')
     .description('Close the current governance cycle.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        let harness = new WeylTester(program.config);
         await harness.close();
     });
 
 program
     .command('nominate')
     .description('Nominates MOBILE_ACCT for promotion or demotion, depending on whether they are a blockmaker.')
-    .action(async (options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async ()=>{
+        let harness = new WeylTester(program.config);
         await harness.nominate();
     });
 
 program
     .command('beginWithdraw <cycleId> <ballotId>')
     .description('Begin a withdrawal on a given ballot.')
-    .action(async (cycleId, ballotId, options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async (cycleId, ballotId)=>{
+        let harness = new WeylTester(program.config);
         await harness.withdrawStart(cycleId, ballotId);
     });
 
 program
     .command('finishWithdraw <withdrawId>')
     .description('Finalize a given withdrawal.')
-    .action(async (withdrawalId, options={})=>{
-        let harness = new WeylTester(options.config);
+    .action(async (withdrawalId)=>{
+        let harness = new WeylTester(program.config);
         await harness.withdrawFinish(withdrawalId);
     });
 
