@@ -17,7 +17,7 @@ const forceToString = (record) => {
     });
 }
 
-const bigLine = () => { console.log('\n---------------------------------------------') }
+const bigLine = () => { console.log('\n---------------------------------------------\n') }
 
 class WeylTester {
 
@@ -39,8 +39,8 @@ class WeylTester {
         if (program.debug){
             bigLine();
             console.table(['Name', 'Value'],[
-                ['PROVIDER_URL',this.PROVIDER_URL]
-                ['WEYL_FILE', this.WEYL_FILE],
+                ['PROVIDER_URL',this.web3Url],
+                ['WEYL_FILE', WEYL_FILE],
                 ['WEYL_ADDR', this.WEYL_ADDR],
                 ['BLOCKVOTE_ADDR', this.BLOCKVOTE_ADDR],
                 ['GAS_PRICE',this.GAS_PRICE],
