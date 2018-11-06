@@ -12,6 +12,7 @@ program
     .description(package.description)
     .option('-c, --config <path>', 'Provide a path to a config.json whose parameters will override the defaults.')
     .option('-p, --prod', 'Use the production network version of the WeylGov contract.')
+    .option('-d, --debug', 'Print additional info to verify the final config being given to web3.')
     .usage('<command> [options]');
 
 program.on('--help', () => {

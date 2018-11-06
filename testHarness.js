@@ -17,6 +17,8 @@ const forceToString = (record) => {
     });
 }
 
+const bigLine = () => { console.log('\n---------------------------------------------') }
+
 class WeylTester {
 
     constructor(program){
@@ -30,9 +32,22 @@ class WeylTester {
         this.WEYL_ADDR = config.WEYL_ADDR || '0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2';
         this.BLOCKVOTE_ADDR = config.BLOCKVOTE_ADDR || '0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a';
         
-        const WEYL_SPEC = require(`./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`);
+        const WEYL_FILE = `./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`;
+        const WEYL_SPEC = require(WEYL_FILE);
         this.governance = new this.web3.eth.Contract(WEYL_SPEC.abi, this.WEYL_ADDR);
         this.blockVote = new this.web3.eth.Contract(BLOCK_SPEC.abi, this.BLOCKVOTE_ADDR);
+        if (program.debug){
+            bigLine();
+            console.table(['Name', 'Value'],[
+                ['PROVIDER_URL',this.PROVIDER_URL]
+                ['WEYL_FILE', this.WEYL_FILE],
+                ['WEYL_ADDR', this.WEYL_ADDR],
+                ['BLOCKVOTE_ADDR', this.BLOCKVOTE_ADDR],
+                ['GAS_PRICE',this.GAS_PRICE],
+                ['GAS_LIMIT',this.GAS_LIMIT]
+            ]);
+            bigLine();
+        }
     }
 
     defaultSend() { return {
@@ -78,13 +93,13 @@ class WeylTester {
         const contractBal = await this.web3.eth.getBalance(this.WEYL_ADDR);
         const localBal = await this.web3.eth.getBalance(this.LOCAL_ACCT);
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
-        console.log('\n---------------------------------------------')
+        bigLine();
         console.table(['Account', 'Address', 'Balance'], [
             ['Weyl Contract', this.WEYL_ADDR, adjust(contractBal)],
             ['LOCAL_ACCT', this.LOCAL_ACCT, adjust(localBal)],
             ['MOBILE_ACCT', this.MOBILE_ACCT, adjust(mobileBal)]
         ]);
-        console.log('---------------------------------------------\n')
+        bigLine();
     }
     
     async inspect(){
@@ -100,7 +115,7 @@ class WeylTester {
         strungCycleRecord.status = cycleStatuses[strungCycleRecord.status];
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
         const adjustedBal = new BigNum(mobileBal).shiftedBy(-18).toNumber();
-        console.log('---------------------------------------------')
+        bigLine();
         console.log(`\n  ==> Cycle ${currentCycleId}, MOBILE_ACCT EXC balance : ${adjustedBal}\n`)
         console.table([strungCycleRecord]);
     
@@ -173,7 +188,7 @@ class WeylTester {
         } else { 
             console.log('\n  ==> No withdrawals made yet')
         };
-        console.log('---------------------------------------------')
+        bigLine();
     }
     
     async nominate(){
