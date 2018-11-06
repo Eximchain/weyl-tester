@@ -19,8 +19,8 @@ const forceToString = (record) => {
 
 class WeylTester {
 
-    constructor(configPath){
-        const config = configPath ? JSON.parse(fs.readFileSync(configPath)) : {};
+    constructor(program){
+        const config = program.config ? JSON.parse(fs.readFileSync(program.config)) : {};
         this.web3Url = config.PROVIDER_URL || 'http://localhost:8545';
         this.web3 = new Web3(new Web3.providers.HttpProvider(this.web3Url));
         this.GAS_PRICE = config.GAS_PRICE || '2000000';
@@ -30,6 +30,7 @@ class WeylTester {
         this.WEYL_ADDR = config.WEYL_ADDR || '0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2';
         this.BLOCKVOTE_ADDR = config.BLOCKVOTE_ADDR || '0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a';
         
+        const WEYL_SPEC = require(`./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`);
         this.governance = new this.web3.eth.Contract(WEYL_SPEC.abi, this.WEYL_ADDR);
         this.blockVote = new this.web3.eth.Contract(BLOCK_SPEC.abi, this.BLOCKVOTE_ADDR);
     }

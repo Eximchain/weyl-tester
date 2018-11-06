@@ -11,6 +11,7 @@ program
     .name('weylTest')
     .description(package.description)
     .option('-c, --config <path>', 'Provide a path to a config.json whose parameters will override the defaults.')
+    .option('-p, --prod', 'Use the production network version of the WeylGov contract.')
     .usage('<command> [options]');
 
 program.on('--help', () => {
@@ -63,7 +64,7 @@ program
     .command('inspect')
     .description('Print a summary of the current state of the governance contract.')
     .action(async ()=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.inspect();
     });
 
@@ -71,7 +72,7 @@ program
     .command('balances')
     .description('Check the balance stored at both ACCTs and the WeylGovernance contract.')
     .action(async ()=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.balances();
     });
 
@@ -79,7 +80,7 @@ program
     .command('fund')
     .description('Send 10K ETH from LOCAL_ACCT to MOBILE_ACCT.')
     .action(async ()=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.fund();
     });
 
@@ -87,8 +88,7 @@ program
     .command('init')
     .description('Ensures both LOCAL_ACCT & MOBILE_ACCT are allowed to govern.  Call after fresh contract deploy.')
     .action(async ()=>{
-        console.log('program.config : ',program.config);
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.init();
     });
 
@@ -96,7 +96,7 @@ program
     .command('open')
     .description('Open a new governance cycle.')
     .action(async ()=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.open();
     });
 
@@ -104,7 +104,7 @@ program
     .command('close')
     .description('Close the current governance cycle.')
     .action(async ()=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.close();
     });
 
@@ -112,7 +112,7 @@ program
     .command('nominate')
     .description('Nominates MOBILE_ACCT for promotion or demotion, depending on whether they are a blockmaker.')
     .action(async ()=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.nominate();
     });
 
@@ -120,7 +120,7 @@ program
     .command('beginWithdraw <cycleId> <ballotId>')
     .description('Begin a withdrawal on a given ballot.')
     .action(async (cycleId, ballotId)=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.withdrawStart(cycleId, ballotId);
     });
 
@@ -128,7 +128,7 @@ program
     .command('finishWithdraw <withdrawId>')
     .description('Finalize a given withdrawal.')
     .action(async (withdrawalId)=>{
-        let harness = new WeylTester(program.config);
+        let harness = new WeylTester(program);
         await harness.withdrawFinish(withdrawalId);
     });
 
