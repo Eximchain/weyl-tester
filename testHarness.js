@@ -77,11 +77,13 @@ class WeylTester {
         const contractBal = await this.web3.eth.getBalance(this.WEYL_ADDR);
         const localBal = await this.web3.eth.getBalance(this.LOCAL_ACCT);
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
+        console.log('\n---------------------------------------------')
         console.table(['Account', 'Address', 'Balance'], [
             ['Weyl Contract', this.WEYL_ADDR, adjust(contractBal)],
             ['LOCAL_ACCT', this.LOCAL_ACCT, adjust(localBal)],
             ['MOBILE_ACCT', this.MOBILE_ACCT, adjust(mobileBal)]
         ]);
+        console.log('---------------------------------------------\n')
     }
     
     async inspect(){
