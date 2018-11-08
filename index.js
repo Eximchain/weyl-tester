@@ -56,8 +56,9 @@ program
         `)
         console.log("  > Default MOBILE_ACCT:")
         console.log("")
-        console.log("    > MOBILE_ACCT seed: 'dial worth chase zebra hip art copper upgrade right asset earn caution'");
-        console.log("    > MOBILE_ACCT password: 'password'");
+        console.log(`    > MOBILE_ACCT seed: "dial worth chase zebra hip art copper upgrade right asset earn caution"`);
+        console.log(`    > MOBILE_ACCT password: "password"`);
+        console.log(`    > MOBILE_ACCT HD_PATH: "m/0'/0'/0'"`)
         console.log("")
     })
 
@@ -68,6 +69,14 @@ program
         let harness = new WeylTester(program);
         await harness.inspect();
     });
+
+program
+    .command('addresses')
+    .description('Prints full 42-character addresses, as they are truncated elsewhere.')
+    .action(async () => {
+        let harness = new WeylTester(program);
+        await harness.addresses();
+    })
 
 program
     .command('balances')

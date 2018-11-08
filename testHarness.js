@@ -17,6 +17,10 @@ const forceToString = (record) => {
     });
 }
 
+const truncEth = (val) =>  new BigNum(val).shiftedBy(-18).dp(2).toNumber();
+
+const truncAddr = (addr) => addr.length == 42 ? `${addr.slice(0,6)}...${addr.slice(38,42)}` : addr;
+
 const bigLine = () => { console.log('\n---------------------------------------------\n') }
 
 class WeylTester {
@@ -38,7 +42,7 @@ class WeylTester {
         this.blockVote = new this.web3.eth.Contract(BLOCK_SPEC.abi, this.BLOCKVOTE_ADDR);
         if (program.debug){
             bigLine();
-            console.table(['Name', 'Value'],[
+            console.table(['Config Variable', 'Value'],[
                 ['PROVIDER_URL',this.web3Url],
                 ['WEYL_FILE', WEYL_FILE],
                 ['WEYL_ADDR', this.WEYL_ADDR],
@@ -62,7 +66,7 @@ class WeylTester {
             return 'MOBILE_ACCT';
         } else if (lowAddr == this.LOCAL_ACCT.toLowerCase()){
             return 'LOCAL_ACCT';
-        } else { return addr }
+        } else { return truncAddr(addr) }
     }
 
     async ensureLocalAcct(){
@@ -77,27 +81,38 @@ class WeylTester {
         const ensureGovern = async (name, addr) => {
             const canGovern = await this.governance.methods.canGovern(addr).call();
             if (canGovern){
-                console.log(`\n  => ${name} (${addr}) already has governing privileges, doing nothing`);
+                console.log(`\n  => ${name} (${truncAddr(addr)}) already has governing privileges, doing nothing`);
             } else {
-                await this.governance.methods.registerGoverning(addr).send({ from : this.LOCAL_ACCT });
-                console.log(`\n  => ${name} (${addr}) now has governing privileges`);
+                const receipt = await this.governance.methods.registerGoverning(addr).send({ from : this.LOCAL_ACCT });
+                console.log(`\n  => ${name} (${truncAddr(addr)}) now has governing privileges, receipt follows:\n`);
+                console.log(receipt);
             }
         }
         await ensureGovern('LOCAL_ACCT', this.LOCAL_ACCT);
         await ensureGovern('MOBILE_ACCT', this.MOBILE_ACCT);
     }
+
+    async addresses(){
+        await this.ensureLocalAcct();
+        bigLine();
+        console.table(['Account', 'Address'],[
+            ['Weyl Contract', this.WEYL_ADDR],
+            ['LOCAL_ACCT', this.LOCAL_ACCT],
+            ['MOBILE_ACCT', this.MOBILE_ACCT]
+        ]);
+        bigLine();
+    }
     
     async balances(){
         await this.ensureLocalAcct();
-        const adjust = bal => new BigNum(bal).shiftedBy(-18).toNumber();
         const contractBal = await this.web3.eth.getBalance(this.WEYL_ADDR);
         const localBal = await this.web3.eth.getBalance(this.LOCAL_ACCT);
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
         bigLine();
         console.table(['Account', 'Address', 'Balance'], [
-            ['Weyl Contract', this.WEYL_ADDR, adjust(contractBal)],
-            ['LOCAL_ACCT', this.LOCAL_ACCT, adjust(localBal)],
-            ['MOBILE_ACCT', this.MOBILE_ACCT, adjust(mobileBal)]
+            ['Weyl Contract', truncAddr(this.WEYL_ADDR), truncEth(contractBal)],
+            ['LOCAL_ACCT', truncAddr(this.LOCAL_ACCT), truncEth(localBal)],
+            ['MOBILE_ACCT', truncAddr(this.MOBILE_ACCT), truncEth(mobileBal)]
         ]);
         bigLine();
     }
@@ -113,14 +128,16 @@ class WeylTester {
             2: 'Completed'
         };
         strungCycleRecord.status = cycleStatuses[strungCycleRecord.status];
+        strungCycleRecord.elected = this.resolveToName(strungCycleRecord.elected);
+        strungCycleRecord.evicted = this.resolveToName(strungCycleRecord.evicted);
+        strungCycleRecord.totalPayments = truncEth(strungCycleRecord.totalPayments);
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
-        const adjustedBal = new BigNum(mobileBal).shiftedBy(-18).toNumber();
         bigLine();
-        console.log(`\n  ==> Cycle ${currentCycleId}, MOBILE_ACCT EXC balance : ${adjustedBal}\n`)
+        console.log(`\n  ==> Cycle ${currentCycleId}, MOBILE_ACCT EXC balance : ${truncEth(mobileBal)}\n`)
         console.table([strungCycleRecord]);
     
         const allNomineeBallots = [];
-        const getAllBallots = true;
+        const getAllBallots = false;
         if (getAllBallots){
             let nomKey = 0;
             let haveMoreNomineeBallots = true;
@@ -144,7 +161,7 @@ class WeylTester {
             for (var i of range(numNominees)){
                 let nomAddress = await this.governance.methods.nomineeBallotKeys(i).call();
                 let nomBallot = await this.governance.methods.nomineeBallots(nomAddress).call();
-                nomBallot['Nominee'] = nomAddress == this.MOBILE_ACCT ? 'MOBILE_ACCT' : nomAddress == this.LOCAL_ACCT ? 'LOCAL_ACCT' : nomAddress;
+                nomBallot['Nominee'] = this.resolveToName(nomAddress);
                 nomBallot = forceToString(nomBallot);
                 allNomineeBallots.push(nomBallot);
             }
@@ -164,6 +181,7 @@ class WeylTester {
             ballot['Ballot ID'] = i+1;
             ballot['voter'] = this.resolveToName(ballot['voter']);
             ballot['voted_for'] = this.resolveToName(ballot['voted_for']);
+            ballot['amount'] = truncEth(ballot['amount']);
             allBallots.push(forceToString(ballot));
         }
         if (allBallots.length > 0){
@@ -179,7 +197,8 @@ class WeylTester {
             let record = await this.governance.methods.withdrawRecords(i+1).call();
             record.withdrawalId = i+1;
             record.status = cycleStatuses[record.status];
-            record['beneficiary'] = this.resolveToName(record['beneficiary']);
+            record.beneficiary = this.resolveToName(record.beneficiary);
+            record.amount = truncEth(record.amount);
             allWithdrawalRecords.push(forceToString(record))
         }
         if (allWithdrawalRecords.length > 0){
@@ -211,7 +230,7 @@ class WeylTester {
     async fund(){
         await this.ensureLocalAcct();
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
-        const adjustedBal = new BigNum(mobileBal).shiftedBy(-18).toNumber();
+        const adjustedBal = truncEth(mobileBal);
         if (adjustedBal < 10000){
             let tenKEXC = new BigNum(10000).shiftedBy(18);
             const allowanceReceipt = await this.web3.eth.sendTransaction({
