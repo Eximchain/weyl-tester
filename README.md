@@ -1,6 +1,7 @@
 # Weyl Tester
 Command-line interface for performing the core WeylGovernance actions (opening/closing cycles, voting, withdrawing) in a testing environment.
 
+## Original Purpose
 This library was designed to act as the "other user" in an election while testing the new mobile client.  It uses the first web3 account (`LOCAL_ACCT`) to perform actions on a default or configured client address (`MOBILE_ACCT`).  One of the `WeylGovernance` contracts from [`eximchain-governance-mechanism`](https://github.com/Eximchain/eximchain-governance-mechanism/blob/master/contracts/WeylGovV2.sol) must already be deployed on Ganache for the tester to behave, and its deployment address must be provided in config.
 
 ## Installation
@@ -9,6 +10,14 @@ This is a private package for Eximchain employees, so you must be given access t
 ```
 npm install -g @eximchain/weyl-tester
 ```
+
+The underlying web3 dependency builds some C dependencies using node-gyp, that sometimes leads to permissions issues.  If you get permissions errors, try running as
+
+```
+sudo npm install -g @eximchain/weyl-tester --unsafe-perm
+```
+This command isn't always reliable when SSH'd into our nodes, as the installation requires building some C dependencies and the built-in `ubuntu` account does not have required permissions.  Try running it with and without the `sudo` and the `--unsafe-perm`, it should work on the third or fourth try.
+
 ## Usage
 To get a full help print-out, simply call the root command from any terminal:
 

@@ -83,7 +83,7 @@ class WeylTester {
             if (canGovern){
                 console.log(`\n  => ${name} (${truncAddr(addr)}) already has governing privileges, doing nothing`);
             } else {
-                const receipt = await this.governance.methods.registerGoverning(addr).send({ from : this.LOCAL_ACCT });
+                const receipt = await this.governance.methods.registerGoverning(addr).send(this.defaultSend());
                 console.log(`\n  => ${name} (${truncAddr(addr)}) now has governing privileges, receipt follows:\n`);
                 console.log(receipt);
             }
