@@ -6,7 +6,6 @@ var mapValues = require('lodash.mapvalues');
 const Web3 = require('web3');
 const cTable = require('console.table');
 
-const WEYL_SPEC = require('./contracts/WeylGovV2.json');
 const BLOCK_SPEC = require('./contracts/BlockVotingDeployable.json');
 
 const forceToString = (record) => { 
@@ -69,6 +68,12 @@ class WeylTester {
         } else { return truncAddr(addr) }
     }
 
+    checkReceipt(receipt){
+        if (receipt.gasUsed == this.defaultSend().gas){
+            console.log('\n  => WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n');
+        }
+    }
+
     async ensureLocalAcct(){
         if (!this.LOCAL_ACCT){
             let localAccts = await this.web3.eth.getAccounts();
@@ -86,6 +91,7 @@ class WeylTester {
                 const receipt = await this.governance.methods.registerGoverning(addr).send(this.defaultSend());
                 console.log(`\n  => ${name} (${truncAddr(addr)}) now has governing privileges, receipt follows:\n`);
                 console.log(receipt);
+                this.checkReceipt(receipt);
             }
         }
         await ensureGovern('LOCAL_ACCT', this.LOCAL_ACCT);
@@ -221,6 +227,7 @@ class WeylTester {
             const alreadyBlockMaker = await this.blockVote.methods.isBlockMaker(this.MOBILE_ACCT).call();
             const voteReceipt = await this.governance.methods.vote(this.MOBILE_ACCT, !alreadyBlockMaker, true, 42).send(sendArg);
             console.log(voteReceipt);
+            this.checkReceipt(voteReceipt);
             await this.inspect();
         } else {
             console.log("\n  ==> Detected an existing ballot for the mobile candidate in this cycle, doing nothing.");
@@ -239,6 +246,7 @@ class WeylTester {
                 from : this.LOCAL_ACCT
             })
             console.log("\n  ==> Successfully sent MOBILE_ACCT 10K EXC, here's receipt: \n",allowanceReceipt);
+            this.checkReceipt(allowanceReceipt);
         } else {
             console.log(`\n  ==> MOBILE_ACCT already has ${adjustedBal} EXC, they do not need more than 10,000 at a time.`);
         }
@@ -249,6 +257,7 @@ class WeylTester {
         const openReceipt = await this.governance.methods.newGovernanceCycle().send(this.defaultSend())
         console.log('\n  ==> Successfully opened a governance cycle, receipt follows: \n');
         console.log(openReceipt);
+        this.checkReceipt(openReceipt);
         await this.inspect();
     }
     
@@ -257,6 +266,7 @@ class WeylTester {
         const closeReceipt = await this.governance.methods.finalizeGovernanceCycle().send(this.defaultSend());
         console.log('\n  ==> Successfully closed a governance cycle, receipt follows: \n');
         console.log(closeReceipt);
+        this.checkReceipt(closeReceipt);
         await this.inspect();
     }
     
@@ -265,6 +275,7 @@ class WeylTester {
         const startWithdrawReceipt = await this.governance.methods.startWithdraw(parseInt(cycleId), parseInt(ballotId)).send(this.defaultSend());
         console.log(`\n  ==> Successfully started a withdrawal, cycle ${cycleId} & ballot ${ballotId}, receipt follows: \n`);
         console.log(startWithdrawReceipt);
+        this.checkReceipt(startWithdrawReceipt);
     }
 
     async withdrawFinish(withdrawId){
@@ -272,6 +283,7 @@ class WeylTester {
         const finalizeWithdrawReceipt = await this.governance.methods.finalizeWithdraw(parseInt(withdrawId)).send(this.defaultSend());
         console.log(`\n  ==> Successfully finalized withdrawal ID ${withdrawId}, receipt follows: \n`);
         console.log(finalizeWithdrawReceipt);
+        this.checkReceipt(finalizeWithdrawReceipt);
         await this.inspect();
     }
 }
