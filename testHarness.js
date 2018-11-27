@@ -39,18 +39,7 @@ class WeylTester {
         const WEYL_SPEC = require(WEYL_FILE);
         this.governance = new this.web3.eth.Contract(WEYL_SPEC.abi, this.WEYL_ADDR);
         this.blockVote = new this.web3.eth.Contract(BLOCK_SPEC.abi, this.BLOCKVOTE_ADDR);
-        if (program.debug){
-            bigLine();
-            console.table(['Config Variable', 'Value'],[
-                ['PROVIDER_URL',this.web3Url],
-                ['WEYL_FILE', WEYL_FILE],
-                ['WEYL_ADDR', this.WEYL_ADDR],
-                ['BLOCKVOTE_ADDR', this.BLOCKVOTE_ADDR],
-                ['GAS_PRICE',this.GAS_PRICE],
-                ['GAS_LIMIT',this.GAS_LIMIT]
-            ]);
-            bigLine();
-        }
+        this.debug = program.debug;
     }
 
     defaultSend() { return {
@@ -58,6 +47,31 @@ class WeylTester {
         gasPrice: this.GAS_PRICE,
         gas: this.GAS_LIMIT
     } };
+
+    async precallSetup(){
+        await this.ensureLocalAcct();
+        if (this.debug){
+            bigLine();
+            console.table(['Config Variable', 'Value'],[
+                ['PROVIDER_URL',this.web3Url],
+                ['WEYL_FILE', WEYL_FILE],
+                ['WEYL_ADDR', this.WEYL_ADDR],
+                ['BLOCKVOTE_ADDR', this.BLOCKVOTE_ADDR],
+                ['MOBILE_ACCT',this.MOBILE_ACCT],
+                ['LOCAL_ACCT',this.LOCAL_ACCT]
+                ['GAS_PRICE',this.GAS_PRICE],
+                ['GAS_LIMIT',this.GAS_LIMIT]
+            ]);
+            bigLine();
+        }
+    }
+
+    async ensureLocalAcct(){
+        if (!this.LOCAL_ACCT){
+            let localAccts = await this.web3.eth.getAccounts();
+            this.LOCAL_ACCT = localAccts[0];
+        }
+    }
 
     resolveToName(addr) {
         let lowAddr = addr.toLowerCase();
@@ -74,15 +88,8 @@ class WeylTester {
         }
     }
 
-    async ensureLocalAcct(){
-        if (!this.LOCAL_ACCT){
-            let localAccts = await this.web3.eth.getAccounts();
-            this.LOCAL_ACCT = localAccts[0];
-        }
-    }
-
     async init(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const ensureGovern = async (name, addr) => {
             const canGovern = await this.governance.methods.canGovern(addr).call();
             if (canGovern){
@@ -99,7 +106,7 @@ class WeylTester {
     }
 
     async addresses(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         bigLine();
         console.table(['Account', 'Address'],[
             ['Weyl Contract', this.WEYL_ADDR],
@@ -110,7 +117,7 @@ class WeylTester {
     }
     
     async balances(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const contractBal = await this.web3.eth.getBalance(this.WEYL_ADDR);
         const localBal = await this.web3.eth.getBalance(this.LOCAL_ACCT);
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
@@ -124,7 +131,7 @@ class WeylTester {
     }
     
     async inspect(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const currentCycleId = await this.governance.methods.currentGovernanceCycle().call();
         const currentCycleRecord = await this.governance.methods.governanceCycleRecords(currentCycleId).call();
         const strungCycleRecord = forceToString(currentCycleRecord);
@@ -217,7 +224,7 @@ class WeylTester {
     }
     
     async nominate(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const currentCycleId = await this.governance.methods.currentGovernanceCycle.call();
         const mobileBallot = await this.governance.methods.nomineeBallots(this.MOBILE_ACCT).call();
         if (mobileBallot.governanceCycleId !== currentCycleId){
@@ -235,7 +242,7 @@ class WeylTester {
     }
     
     async fund(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
         const adjustedBal = truncEth(mobileBal);
         if (adjustedBal < 10000){
@@ -253,7 +260,7 @@ class WeylTester {
     }
     
     async open(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const openReceipt = await this.governance.methods.newGovernanceCycle().send(this.defaultSend())
         console.log('\n  ==> Successfully opened a governance cycle, receipt follows: \n');
         console.log(openReceipt);
@@ -262,7 +269,7 @@ class WeylTester {
     }
     
     async close(){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const closeReceipt = await this.governance.methods.finalizeGovernanceCycle().send(this.defaultSend());
         console.log('\n  ==> Successfully closed a governance cycle, receipt follows: \n');
         console.log(closeReceipt);
@@ -271,7 +278,7 @@ class WeylTester {
     }
     
     async withdrawStart(cycleId, ballotId){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const startWithdrawReceipt = await this.governance.methods.startWithdraw(parseInt(cycleId), parseInt(ballotId)).send(this.defaultSend());
         console.log(`\n  ==> Successfully started a withdrawal, cycle ${cycleId} & ballot ${ballotId}, receipt follows: \n`);
         console.log(startWithdrawReceipt);
@@ -279,7 +286,7 @@ class WeylTester {
     }
 
     async withdrawFinish(withdrawId){
-        await this.ensureLocalAcct();
+        await this.precallSetup();
         const finalizeWithdrawReceipt = await this.governance.methods.finalizeWithdraw(parseInt(withdrawId)).send(this.defaultSend());
         console.log(`\n  ==> Successfully finalized withdrawal ID ${withdrawId}, receipt follows: \n`);
         console.log(finalizeWithdrawReceipt);
