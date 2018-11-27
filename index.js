@@ -63,6 +63,19 @@ program
     })
 
 program
+    .command('initConfig')
+    .description('Create a config file named conf.json in the current directory.')
+    .action(async () => {
+        fs.writeFile('conf.json', fs.readFileSync(path.resolve(__dirname, './sample-config.json')), (err) => {
+            if (err) {
+                console.log('Error on writing file: ',err);
+            } else {
+                console.log('Successfully created default config file at conf.json');
+            }
+        })
+    })
+
+program
     .command('inspect')
     .description('Print a summary of the current state of the governance contract.')
     .action(async ()=>{
