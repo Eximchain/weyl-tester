@@ -1,6 +1,6 @@
 {
   "name": "@eximchain/weyl-tester",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "CLI for calling key WeylGovernance contract fxns with first acct provided by web3.",
   "main": "index.js",
   "homepage": "https://github.com/Eximchain/weyl-tester",
@@ -23,6 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "bignumber.js": "^8.0.1",
+    "chalk": "^2.4.1",
     "commander": "^2.19.0",
     "console.table": "^0.10.0",
     "lodash.mapvalues": "^4.6.0",
