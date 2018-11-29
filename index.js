@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-let fs = require("fs");
-let path = require("path");
-var program = require('commander');
+const fs = require("fs");
+const path = require("path");
+const program = require('commander');
+
 const package = JSON.parse(fs.readFileSync(path.resolve(__dirname, './package.json')));
 const WeylTester = require('./testHarness');
+const { addValToConfig, emptyConfig } = require('./utils');
 
 program
     .version(package.version)
@@ -65,14 +67,15 @@ program
 program
     .command('initConfig')
     .description('Create a config file named conf.json in the current directory.')
-    .action(async () => {
-        fs.writeFile('conf.json', fs.readFileSync(path.resolve(__dirname, './sample-config.json')), (err) => {
-            if (err) {
-                console.log('Error on writing file: ',err);
-            } else {
-                console.log('Successfully created default config file at conf.json');
-            }
-        })
+    .action(async function(){
+        let config = await addValToConfig(emptyConfig, 'Full Provider URL', 'PROVIDER_URL', 'http://localhost:8545');
+        config = await addValToConfig(config, 'Gas Price', 'GAS_PRICE', "20000000000");
+        config = await addValToConfig(config, 'Gas Limit', 'GAS_LIMIT', "2000000");
+        config = await addValToConfig(config, 'WeylGovernance Address', 'WEYL_ADDR', "0x000000000000000000000000000000000000002A");
+        config = await addValToConfig(config, 'BlockVoting Address', 'BLOCKVOTE_ADDR', "0x0000000000000000000000000000000000000020");
+        config = await addValToConfig(config, 'Mobile Account Address', 'MOBILE_ADDR', "0x53fd44c705473ee2d780fe8f5278076f2171ca65");
+        fs.writeFileSync('conf.json', config);
+        console.log('Successfully created default config file at conf.json');
     })
 
 program
