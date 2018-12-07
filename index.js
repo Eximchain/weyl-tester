@@ -13,6 +13,7 @@ program
     .name('weylTest')
     .description(package.description)
     .option('-c, --config <path>', 'Provide a path to a config.json whose parameters will override the defaults.')
+    .option('-a, --abi <path>', 'Provide a path to a build JSON of the current WeylGov contract.')
     .option('-p, --prod', 'Use the production network version of the WeylGov contract.')
     .option('-d, --debug', 'Print additional info to verify the final config being given to web3.')
     .usage('<command> [options]');

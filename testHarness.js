@@ -23,6 +23,8 @@ const truncAddr = (addr) => addr.length == 42 ? `${addr.slice(0,6)}...${addr.sli
 
 const bigLine = () => { console.log(chalk.green('\n---------------------------------------------\n')) }
 
+const getABI = abiObj => Array.isArray(abiObj) ? abiObj : abiObj.abi;
+
 class WeylTester {
 
     constructor(program){
@@ -36,10 +38,16 @@ class WeylTester {
         this.WEYL_ADDR = config.WEYL_ADDR || '0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2';
         this.BLOCKVOTE_ADDR = config.BLOCKVOTE_ADDR || '0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a';
         
-        const WEYL_FILE = `./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`;
-        const WEYL_SPEC = require(WEYL_FILE);
-        this.governance = new this.web3.eth.Contract(WEYL_SPEC.abi, this.WEYL_ADDR);
-        this.blockVote = new this.web3.eth.Contract(BLOCK_SPEC.abi, this.BLOCKVOTE_ADDR);
+        this.WEYL_FILE = `./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`;
+        if (program.abi) {
+            if (program.prod){
+                console.log(chalk.orange(`\nUsed --production to select WeylGovV2Deployable, but also provided an ABI using --abi.  Overriding former, using latter.`));
+            }
+            this.WEYL_FILE = program.abi;
+        }
+        const WEYL_SPEC = require(this.WEYL_FILE);
+        this.governance = new this.web3.eth.Contract(getABI(WEYL_SPEC), this.WEYL_ADDR);
+        this.blockVote = new this.web3.eth.Contract(getABI(BLOCK_SPEC), this.BLOCKVOTE_ADDR);
         this.debug = program.debug;
     }
 
@@ -55,7 +63,7 @@ class WeylTester {
             bigLine();
             console.table(['Config Variable', 'Value'],[
                 ['PROVIDER_URL',this.web3Url],
-                ['WEYL_FILE', WEYL_FILE],
+                ['WEYL_FILE', this.WEYL_FILE],
                 ['WEYL_ADDR', this.WEYL_ADDR],
                 ['BLOCKVOTE_ADDR', this.BLOCKVOTE_ADDR],
                 ['MOBILE_ACCT',this.MOBILE_ACCT],
@@ -85,7 +93,7 @@ class WeylTester {
 
     checkReceipt(receipt){
         if (receipt.gasUsed == this.defaultSend().gas){
-            console.log(chalk.red('\n  => WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n'));
+            console.log(chalk.orange('\n  => WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n'));
         }
     }
 
