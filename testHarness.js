@@ -41,7 +41,7 @@ class WeylTester {
         this.WEYL_FILE = `./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`;
         if (program.abi) {
             if (program.prod){
-                console.log(chalk.orange(`\nUsed --production to select WeylGovV2Deployable, but also provided an ABI using --abi.  Overriding former, using latter.`));
+                console.log(chalk.yellow(`\nUsed --production to select WeylGovV2Deployable, but also provided an ABI using --abi.  Overriding former, using latter.`));
             }
             this.WEYL_FILE = program.abi;
         }
@@ -93,7 +93,7 @@ class WeylTester {
 
     checkReceipt(receipt){
         if (receipt.gasUsed == this.defaultSend().gas){
-            console.log(chalk.orange('\n  => WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n'));
+            console.log(chalk.yellow('\n  => WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n'));
         }
     }
 
@@ -112,6 +112,7 @@ class WeylTester {
         }
         await ensureGovern('LOCAL_ACCT', this.LOCAL_ACCT);
         await ensureGovern('MOBILE_ACCT', this.MOBILE_ACCT);
+        process.exit();
     }
 
     async addresses(){
@@ -123,6 +124,7 @@ class WeylTester {
             ['MOBILE_ACCT', this.MOBILE_ACCT]
         ]);
         bigLine();
+        process.exit();
     }
     
     async balances(){
@@ -137,6 +139,7 @@ class WeylTester {
             ['MOBILE_ACCT', truncAddr(this.MOBILE_ACCT), truncEth(mobileBal)]
         ]);
         bigLine();
+        process.exit();
     }
     
     async inspect(){
@@ -230,6 +233,7 @@ class WeylTester {
             console.log(chalk.green('\n  ==> No withdrawals made yet'));
         };
         bigLine();
+        process.exit();
     }
     
     async nominate(){
@@ -248,6 +252,7 @@ class WeylTester {
         } else {
             console.log(chalk.green("\n  ==> Detected an existing ballot for the mobile candidate in this cycle, doing nothing."));
         }
+        process.exit();
     }
     
     async fund(){
@@ -266,6 +271,7 @@ class WeylTester {
         } else {
             console.log(chalk.green(`\n  ==> MOBILE_ACCT already has ${adjustedBal} EXC, they do not need more than 10,000 at a time.`));
         }
+        process.exit();
     }
     
     async open(){
@@ -275,6 +281,7 @@ class WeylTester {
         console.log(openReceipt);
         this.checkReceipt(openReceipt);
         await this.inspect();
+        process.exit();
     }
     
     async close(){
@@ -284,6 +291,7 @@ class WeylTester {
         console.log(closeReceipt);
         this.checkReceipt(closeReceipt);
         await this.inspect();
+        process.exit();
     }
     
     async withdrawStart(cycleId, ballotId){
@@ -292,6 +300,7 @@ class WeylTester {
         console.log(chalk.green(`\n  ==> Successfully started a withdrawal, cycle ${cycleId} & ballot ${ballotId}, receipt follows: \n`));
         console.log(startWithdrawReceipt);
         this.checkReceipt(startWithdrawReceipt);
+        process.exit();
     }
 
     async withdrawFinish(withdrawId){
@@ -301,6 +310,7 @@ class WeylTester {
         console.log(finalizeWithdrawReceipt);
         this.checkReceipt(finalizeWithdrawReceipt);
         await this.inspect();
+        process.exit();
     }
 }
 

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
+const chalk = require('chalk');
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -35,7 +36,7 @@ const buildConfig = async () => {
     config = await addValToConfig(config, 'BlockVoting Address', 'BLOCKVOTE_ADDR', "0x0000000000000000000000000000000000000020");
     config = await addValToConfig(config, 'Mobile Account Address', 'MOBILE_ADDR', "0x53fd44c705473ee2d780fe8f5278076f2171ca65");
     fs.writeFileSync('conf.json', config);
-    console.log('Successfully created default config file at conf.json');
+    console.log(chalk.green('Successfully created default config file at conf.json'));
     process.exit();
 }
 module.exports = {
