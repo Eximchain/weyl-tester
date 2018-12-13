@@ -34,7 +34,7 @@ const buildConfig = async () => {
     config = await addValToConfig(config, 'Gas Limit', 'GAS_LIMIT', "2000000");
     config = await addValToConfig(config, 'WeylGovernance Address', 'WEYL_ADDR', "0x000000000000000000000000000000000000002A");
     config = await addValToConfig(config, 'BlockVoting Address', 'BLOCKVOTE_ADDR', "0x0000000000000000000000000000000000000020");
-    config = await addValToConfig(config, 'Mobile Account Address', 'MOBILE_ADDR', "0x53fd44c705473ee2d780fe8f5278076f2171ca65");
+    config = await addValToConfig(config, 'Mobile Account Address', 'MOBILE_ACCT', "0x53fd44c705473ee2d780fe8f5278076f2171ca65");
     fs.writeFileSync('conf.json', config);
     console.log(chalk.green('Successfully created default config file at conf.json'));
     process.exit();

@@ -93,7 +93,7 @@ class WeylTester {
 
     checkReceipt(receipt){
         if (receipt.gasUsed == this.defaultSend().gas){
-            console.log(chalk.yellow('\n  => WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n'));
+            console.log(chalk.yellow('\n  ==> WARNING: The transaction used all the gas it was given.  This is often a sign that while the transaction was successfully mined, the function failed to execute.  Verify on the contract that the proper state changes were made.\n'));
         }
     }
 
@@ -102,10 +102,10 @@ class WeylTester {
         const ensureGovern = async (name, addr) => {
             const canGovern = await this.governance.methods.canGovern(addr).call();
             if (canGovern){
-                console.log(chalk.green(`\n  => ${name} (${truncAddr(addr)}) already has governing privileges, doing nothing`));
+                console.log(chalk.green(`\n  ==> ${name} (${truncAddr(addr)}) already has governing privileges, doing nothing.\n`));
             } else {
+                console.log(chalk.green(`\n  ==> ${name} (${truncAddr(addr)}) is being given governing privileges.  If successful, receipt will follow:\n`));
                 const receipt = await this.governance.methods.registerGoverning(addr).send(this.defaultSend());
-                console.log(chalk.green(`\n  => ${name} (${truncAddr(addr)}) now has governing privileges, receipt follows:\n`));
                 console.log(receipt);
                 this.checkReceipt(receipt);
             }
@@ -144,22 +144,30 @@ class WeylTester {
     
     async inspect(){
         await this.precallSetup();
-        const currentCycleId = await this.governance.methods.currentGovernanceCycle().call();
-        const currentCycleRecord = await this.governance.methods.governanceCycleRecords(currentCycleId).call();
-        const strungCycleRecord = forceToString(currentCycleRecord);
+        const cycleRecords = [];
         const cycleStatuses = {
             0 : 'NoRecord',
             1: 'Started',
             2: 'Completed'
         };
-        strungCycleRecord.status = cycleStatuses[strungCycleRecord.status];
-        strungCycleRecord.elected = this.resolveToName(strungCycleRecord.elected);
-        strungCycleRecord.evicted = this.resolveToName(strungCycleRecord.evicted);
-        strungCycleRecord.totalPayments = truncEth(strungCycleRecord.totalPayments);
-        const mobileBal = await this.web3.eth.getBalance(this.MOBILE_ACCT);
+        const processCycleRecord = (record) => {
+            const strungRecord = forceToString(record);
+            strungRecord.status = cycleStatuses[strungRecord.status]
+            strungRecord.elected = this.resolveToName(strungRecord.elected);
+            strungRecord.evicted = this.resolveToName(strungRecord.evicted);
+            strungRecord.totalPayments = strungRecord.totalPayments;
+            return strungRecord;
+        }
+        const currentCycleId = await this.governance.methods.currentGovernanceCycle().call();
+        while (currentCycleId > 0){
+            const currentCycleRecord = await this.governance.methods.governanceCycleRecords(currentCycleId).call();
+            cycleRecords.push(currentCycleRecord);
+            currentCycleId -= 1;
+        }
+
         bigLine();
-        console.log(chalk.green(`\n  ==> Cycle ${currentCycleId}, MOBILE_ACCT EXC balance : ${truncEth(mobileBal)}\n`));
-        console.table([strungCycleRecord]);
+        console.log(chalk.green(`\n  ==> GOVERNANCE CYCLE RECORDS\n`));
+        console.table(cycleRecords.map(processCycleRecord));
     
         const allNomineeBallots = [];
         const getAllBallots = false;
@@ -196,7 +204,7 @@ class WeylTester {
             console.log(chalk.green('\n  ==> NOMINEE BALLOTS\n'));
             console.table(allNomineeBallots);
         } else {
-            console.log(chalk.green('\n  ==> No nominee ballots made yet'));
+            console.log(chalk.green('\n  ==> No nominee ballots made yet.'));
         }
     
         const currentBallotId = await this.governance.methods.ballotIndex().call();
@@ -213,7 +221,7 @@ class WeylTester {
             console.log(chalk.green('\n  ==> VOTE BALLOTS\n'));
             console.table(allBallots);
         } else {
-            console.log(chalk.green('\n  ==> No vote ballots made yet'));
+            console.log(chalk.green('\n  ==> No vote ballots made yet.'));
         }
     
         const allWithdrawalRecords = [];
@@ -227,10 +235,10 @@ class WeylTester {
             allWithdrawalRecords.push(forceToString(record))
         }
         if (allWithdrawalRecords.length > 0){
-            console.log(chalk.green('\n  ==> All past withdrawals\n'));
+            console.log(chalk.green('\n  ==> WITHDRAWAL RECORDS\n'));
             console.table(allWithdrawalRecords);
         } else { 
-            console.log(chalk.green('\n  ==> No withdrawals made yet'));
+            console.log(chalk.green('\n  ==> No withdrawals made yet.'));
         };
         bigLine();
         process.exit();
@@ -241,7 +249,7 @@ class WeylTester {
         const currentCycleId = await this.governance.methods.currentGovernanceCycle.call();
         const mobileBallot = await this.governance.methods.nomineeBallots(this.MOBILE_ACCT).call();
         if (mobileBallot.governanceCycleId !== currentCycleId){
-            console.log(chalk.green("\n  => Detected no current ballot for MOBILE_ACCT, first address is voting for them.  Here's the receipt: \n"));
+            console.log(chalk.green("\n  ==> Detected no current ballot for MOBILE_ACCT, first address is voting for them.  If successful, receipt will follow: \n"));
             const sendArg = this.defaultSend();
             sendArg.value = new BigNum(42).multipliedBy(42).shiftedBy(18);
             const alreadyBlockMaker = await this.blockVote.methods.isBlockMaker(this.MOBILE_ACCT).call();
@@ -261,12 +269,13 @@ class WeylTester {
         const adjustedBal = truncEth(mobileBal);
         if (adjustedBal < 10000){
             let tenKEXC = new BigNum(10000).shiftedBy(18);
+            console.log(chalk.green("\n  ==> Sending MOBILE_ACCT 10K EXC.  If successful, receipt will follow:"));
             const allowanceReceipt = await this.web3.eth.sendTransaction({
                 to : this.MOBILE_ACCT,
                 value : tenKEXC,
                 from : this.LOCAL_ACCT
             })
-            console.log(chalk.green("\n  ==> Successfully sent MOBILE_ACCT 10K EXC, here's receipt: \n",allowanceReceipt));
+            console.log(allowanceReceipt);
             this.checkReceipt(allowanceReceipt);
         } else {
             console.log(chalk.green(`\n  ==> MOBILE_ACCT already has ${adjustedBal} EXC, they do not need more than 10,000 at a time.`));
@@ -276,8 +285,8 @@ class WeylTester {
     
     async open(){
         await this.precallSetup();
-        const openReceipt = await this.governance.methods.newGovernanceCycle().send(this.defaultSend())
-        console.log(chalk.green('\n  ==> Successfully opened a governance cycle, receipt follows: \n'));
+        console.log(chalk.green('\n  ==> Opening a governance cycle.  If successful, receipt will follow: \n'));
+        const openReceipt = await this.governance.methods.newGovernanceCycle().send(this.defaultSend());
         console.log(openReceipt);
         this.checkReceipt(openReceipt);
         await this.inspect();
@@ -286,8 +295,8 @@ class WeylTester {
     
     async close(){
         await this.precallSetup();
+        console.log(chalk.green('\n  ==> Closing a governance cycle.  If successful, receipt will follow: \n'));
         const closeReceipt = await this.governance.methods.finalizeGovernanceCycle().send(this.defaultSend());
-        console.log(chalk.green('\n  ==> Successfully closed a governance cycle, receipt follows: \n'));
         console.log(closeReceipt);
         this.checkReceipt(closeReceipt);
         await this.inspect();
@@ -296,17 +305,18 @@ class WeylTester {
     
     async withdrawStart(cycleId, ballotId){
         await this.precallSetup();
+        console.log(chalk.green(`\n  ==> Starting a withdrawal on ballot ${ballotId} from cycle ${cycleId}.  If successful, receipt will follow: \n`));
         const startWithdrawReceipt = await this.governance.methods.startWithdraw(parseInt(cycleId), parseInt(ballotId)).send(this.defaultSend());
-        console.log(chalk.green(`\n  ==> Successfully started a withdrawal, cycle ${cycleId} & ballot ${ballotId}, receipt follows: \n`));
         console.log(startWithdrawReceipt);
         this.checkReceipt(startWithdrawReceipt);
+        await this.inspect();
         process.exit();
     }
 
     async withdrawFinish(withdrawId){
         await this.precallSetup();
+        console.log(chalk.green(`\n  ==> Finalizing withdrawal ${withdrawId}.  If successful, receipt will follow: \n`));
         const finalizeWithdrawReceipt = await this.governance.methods.finalizeWithdraw(parseInt(withdrawId)).send(this.defaultSend());
-        console.log(chalk.green(`\n  ==> Successfully finalized withdrawal ID ${withdrawId}, receipt follows: \n`));
         console.log(finalizeWithdrawReceipt);
         this.checkReceipt(finalizeWithdrawReceipt);
         await this.inspect();
