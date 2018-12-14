@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const program = require('commander');
+const chalk = require('chalk');
 
 const package = JSON.parse(fs.readFileSync(path.resolve(__dirname, './package.json')));
 const WeylTester = require('./testHarness');
@@ -66,7 +67,16 @@ program
     })
 
 program
-    .command('initConfig')
+    .command('writeLoaders')
+    .description("Writes file load.js which load the BlockVoting and WeylGov contracts to geth's loadScript().")
+    .action(()=>{
+        fs.writeFileSync('load.js', fs.readFileSync(path.resolve(__dirname, './load.js')));
+        console.log(chalk.green('\n Successfully wrote load.js in the current directory.'));
+        process.exit();
+    });
+
+program
+    .command('init')
     .description('Create a config file named conf.json in the current directory.')
     .action(buildConfig)
 
@@ -103,7 +113,7 @@ program
     });
 
 program
-    .command('init')
+    .command('approveGoverning')
     .description('Ensures both LOCAL_ACCT & MOBILE_ACCT are allowed to govern.  Call after fresh contract deploy.')
     .action(async ()=>{
         let harness = new WeylTester(program);

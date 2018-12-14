@@ -38,11 +38,8 @@ class WeylTester {
         this.WEYL_ADDR = config.WEYL_ADDR || '0x9d60084dd3fa8a5f0f352f27f0062cfd8f11f6e2';
         this.BLOCKVOTE_ADDR = config.BLOCKVOTE_ADDR || '0xf9459c4a0385a28163b65a3739f4651b7b8ccc9a';
         
-        this.WEYL_FILE = `./contracts/WeylGovV2${program.prod ? 'Deployable' : ''}.json`;
+        this.WEYL_FILE = `./contracts/WeylGovDeployable.json`;
         if (program.abi) {
-            if (program.prod){
-                console.log(chalk.yellow(`\nUsed --production to select WeylGovV2Deployable, but also provided an ABI using --abi.  Overriding former, using latter.`));
-            }
             this.WEYL_FILE = program.abi;
         }
         const WEYL_SPEC = require(this.WEYL_FILE);
