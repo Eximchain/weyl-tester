@@ -67,11 +67,11 @@ program
     })
 
 program
-    .command('writeLoaders')
+    .command('writeLoader')
     .description("Writes file load.js which load the BlockVoting and WeylGov contracts to geth's loadScript().")
     .action(()=>{
         fs.writeFileSync('load.js', fs.readFileSync(path.resolve(__dirname, './load.js')));
-        console.log(chalk.green('\n Successfully wrote load.js in the current directory.'));
+        console.log(chalk.green('\n Successfully wrote load.js in the current directory.\n'));
         process.exit();
     });
 

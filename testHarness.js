@@ -153,11 +153,16 @@ class WeylTester {
             strungRecord.elected = this.resolveToName(strungRecord.elected);
             strungRecord.evicted = this.resolveToName(strungRecord.evicted);
             strungRecord.totalPayments = strungRecord.totalPayments;
+            strungRecord.electedVotes = strungRecord.electionVotesElected;
+            strungRecord.evictionVotes = strungRecord.evictionVotesEvicted;
+            delete strungRecord.electionVotesElected;
+            delete strungRecord.evictionVotesEvicted
             return strungRecord;
         }
-        const currentCycleId = await this.governance.methods.currentGovernanceCycle().call();
-        while (currentCycleId > 0){
+        let currentCycleId = await this.governance.methods.currentGovernanceCycle().call();
+        while (currentCycleId >= 0){
             const currentCycleRecord = await this.governance.methods.governanceCycleRecords(currentCycleId).call();
+            currentCycleRecord.cycleId = currentCycleId;
             cycleRecords.push(currentCycleRecord);
             currentCycleId -= 1;
         }
